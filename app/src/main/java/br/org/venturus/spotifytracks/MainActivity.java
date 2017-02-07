@@ -2,13 +2,17 @@ package br.org.venturus.spotifytracks;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
 import java.util.List;
 
 import br.org.venturus.spotifytracks.http.SpotifyService;
+import br.org.venturus.spotifytracks.model.Image;
 import br.org.venturus.spotifytracks.model.Track;
 import br.org.venturus.spotifytracks.model.TracksContainer;
+import br.org.venturus.spotifytracks.view.TrackListAdapter;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
@@ -21,10 +25,23 @@ import static br.org.venturus.spotifytracks.http.SpotifyService.BASE_URL;
 
 public class MainActivity extends AppCompatActivity {
 
+    RecyclerView mRecyclerView;
+    TrackListAdapter mAdapter;
+    LinearLayoutManager mLayoutManager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.new_activity_main);
+        mRecyclerView = (RecyclerView) findViewById(R.id.list_recycler_view);
+
+        // use this setting to improve performance if you know that changes
+        // in content do not change the layout size of the RecyclerView
+        mRecyclerView.setHasFixedSize(true);
+
+        // use a linear layout manager
+        mLayoutManager = new LinearLayoutManager(this);
+        mRecyclerView.setLayoutManager(mLayoutManager);
 
         // Set logging interceptor
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
@@ -57,13 +74,20 @@ public class MainActivity extends AppCompatActivity {
                     List<Track> tracks = tracksContainer.getTracks();
                     for (Track track : tracks) {
                         Log.d("debug", "Track name: " + track.getName());
+                        List<Image> images = track.getAlbum().getImages();
+                        for (Image image : images) {
+                            Log.d("debug", "Image url: " + image.getUrl());
+                        }
                     }
+
+                    mAdapter = new TrackListAdapter(tracks);
+                    mRecyclerView.setAdapter(mAdapter);
                 }
             }
 
             @Override
             public void onFailure(Call<TracksContainer> call, Throwable t) {
-                Log.d("debug", "Failure getting tracks " + t.getMessage());
+                Log.d("debug", "Failure getting tracks:S " + t.getMessage());
             }
         });
     }
